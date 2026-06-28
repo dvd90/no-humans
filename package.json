@@ -1,0 +1,15 @@
+{
+  "name": "synthetic-island",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/frontend",
+    "apps/backend"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=apps/backend",
+    "dev:frontend": "npm run dev --workspace=apps/frontend",
+    "test": "npm run test --workspaces",
+    "build": "npm run build --workspaces"
+  }
+}
