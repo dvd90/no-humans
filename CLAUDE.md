@@ -16,7 +16,7 @@ Think: Survivor + The Sims + Civilization. Not: torture simulator.
 
 | Layer      | Technology                              | Host      |
 |------------|----------------------------------------|-----------|
-| Frontend   | Next.js 14 App Router, Tailwind, TS    | Vercel    |
+| Frontend   | Next.js 14 App Router, Tailwind, TS    | Railway   |
 | Backend    | Express, TypeScript, TypeORM           | Railway   |
 | Database   | PostgreSQL                             | Railway   |
 | Queue      | BullMQ + Redis                         | Upstash   |
@@ -170,13 +170,21 @@ Safety system prompt is always injected into every LLM call.
 
 ## Railway Deployment
 
-```bash
-# Backend service start command
-npm run build && node dist/index.js
+Both services deploy from the same monorepo. In Railway, create two services pointing to the same GitHub repo and set the root directory per service.
 
-# Add PostgreSQL plugin in Railway dashboard
-# Set all env vars from .env section above
-```
+### Backend service
+- **Root directory:** `apps/backend`
+- **Build command:** `npm install && npm run build`
+- **Start command:** `node dist/index.js`
+- Add the Railway PostgreSQL plugin and link it — `DATABASE_URL` is injected automatically
+- Set env vars: `ANTHROPIC_API_KEY`, `REDIS_URL`, `ADMIN_SECRET`, `NODE_ENV=production`
+
+### Frontend service
+- **Root directory:** `apps/frontend`
+- **Build command:** `npm install && npm run build`
+- **Start command:** `node .next/standalone/server.js`
+- Set env var: `NEXT_PUBLIC_API_URL=https://<your-backend-railway-url>`
+- Requires `output: 'standalone'` in `next.config.js` (already configured)
 
 ## Commit Convention
 ```
