@@ -1,6 +1,12 @@
 import { Flame, Users, Vote, TrendingUp } from 'lucide-react';
+import { serverApi } from '@/lib/server-api';
+import { EpisodeCard } from '@/components/EpisodeCard';
 
-export default function HomePage() {
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  const latest = await serverApi.latestEpisode();
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
       {/* Live banner */}
@@ -43,6 +49,16 @@ export default function HomePage() {
           Meet the Agents
         </a>
       </div>
+
+      {/* Latest episode */}
+      {latest && (
+        <div className="mb-14">
+          <h2 className="text-lg font-semibold text-white mb-4">Latest Episode</h2>
+          <a href={`/episodes/${latest.id}`}>
+            <EpisodeCard episode={latest} />
+          </a>
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14">

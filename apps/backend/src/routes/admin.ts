@@ -5,6 +5,7 @@ import { Episode } from '../entities/Episode';
 import { Agent } from '../entities/Agent';
 import { World } from '../entities/World';
 import { WorldState } from '../entities/WorldState';
+import { Vote } from '../entities/Vote';
 import { EpisodeGenerator } from '../services/EpisodeGenerator';
 import { LLMService } from '../services/LLMService';
 
@@ -67,6 +68,25 @@ router.post('/episodes/:id/publish', async (req: Request, res: Response, next: N
     episode.status = 'published';
     episode.publishedAt = new Date();
     await repo.save(episode);
+
+    // Open the next community vote (closes in 20 hours, before the next episode)
+    const voteRepo = AppDataSource.getRepository(Vote);
+    const existingVote = await voteRepo.findOne({
+      where: { episodeId: episode.id },
+    });
+    if (!existingVote) {
+      await voteRepo.save(
+        voteRepo.create({
+          worldId: episode.worldId,
+          episodeId: episode.id,
+          optionA: 'Heavy storm',
+          optionB: 'Food shortage',
+          optionC: 'Discovery of a hidden cave',
+          optionD: 'A mysterious message appears',
+          closesAt: new Date(Date.now() + 20 * 60 * 60 * 1000),
+        }),
+      );
+    }
 
     res.json(episode);
   } catch (err) {
