@@ -60,7 +60,7 @@ router.patch('/agents/:id', async (req: Request, res: Response, next: NextFuncti
     const allowed = ['personality', 'goal', 'status', 'energy', 'trustScore', 'publicReputation'] as const;
     for (const key of allowed) {
       if (req.body[key] !== undefined) {
-        (agent as Record<string, unknown>)[key] = req.body[key];
+        (agent as unknown as Record<string, unknown>)[key] = req.body[key];
       }
     }
 
@@ -85,7 +85,7 @@ router.patch('/world-states/:id', async (req: Request, res: Response, next: Next
     const allowed = ['food', 'water', 'shelterQuality', 'morale', 'conflictLevel', 'leadershipStructure', 'activeCrisis', 'factions'] as const;
     for (const key of allowed) {
       if (req.body[key] !== undefined) {
-        (state as Record<string, unknown>)[key] = req.body[key];
+        (state as unknown as Record<string, unknown>)[key] = req.body[key];
       }
     }
 
