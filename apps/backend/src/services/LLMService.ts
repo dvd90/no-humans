@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { ChatProvider } from './llm';
 import { Agent } from '../entities/Agent';
 import { AgentMemory } from '../entities/AgentMemory';
 import { Relationship } from '../entities/Relationship';
@@ -30,12 +30,15 @@ export interface GeneratedPrediction {
   optionB: string;
 }
 
-export class LLMService {
-  private client: Anthropic;
+/** Extract the first JSON object from an LLM reply (tolerates prose/markdown fences). */
+export function extractJson<T>(text: string, context: string): T {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error(`LLM returned no valid JSON for ${context}`);
+  return JSON.parse(jsonMatch[0]) as T;
+}
 
-  constructor(apiKey: string) {
-    this.client = new Anthropic({ apiKey });
-  }
+export class LLMService {
+  constructor(private provider: ChatProvider) {}
 
   async generateAgentIntention(
     agent: Agent,
@@ -87,18 +90,13 @@ Return ONLY valid JSON:
   "expectedEffect": "<what the agent hopes will happen>"
 }`;
 
-    const response = await this.client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 512,
+    const text = await this.provider.complete({
       system: SAFETY_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: prompt }],
+      prompt,
+      maxTokens: 512,
     });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error(`LLM returned no valid JSON for agent ${agent.name}`);
-
-    const parsed = JSON.parse(jsonMatch[0]) as ProposedAction;
+    const parsed = extractJson<ProposedAction>(text, `agent ${agent.name}`);
     if (!parsed.targetAgentId || parsed.targetAgentId === 'null') {
       parsed.targetAgentId = undefined;
     }
@@ -136,18 +134,13 @@ Return ONLY valid JSON:
   "cliffhanger": "<1-2 sentences of unresolved tension to hook viewers>"
 }`;
 
-    const response = await this.client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+    const text = await this.provider.complete({
       system: SAFETY_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: prompt }],
+      prompt,
+      maxTokens: 1024,
     });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('LLM returned no valid JSON for narration');
-
-    return JSON.parse(jsonMatch[0]) as EpisodeNarration;
+    return extractJson<EpisodeNarration>(text, 'narration');
   }
 
   async generatePredictions(
@@ -176,18 +169,13 @@ Return ONLY valid JSON:
   ]
 }`;
 
-    const response = await this.client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 512,
+    const text = await this.provider.complete({
       system: SAFETY_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: prompt }],
+      prompt,
+      maxTokens: 512,
     });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('LLM returned no valid JSON for predictions');
-
-    const parsed = JSON.parse(jsonMatch[0]) as { predictions: GeneratedPrediction[] };
+    const parsed = extractJson<{ predictions: GeneratedPrediction[] }>(text, 'predictions');
     return parsed.predictions;
   }
 }

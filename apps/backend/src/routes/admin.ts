@@ -8,6 +8,7 @@ import { WorldState } from '../entities/WorldState';
 import { Vote } from '../entities/Vote';
 import { EpisodeGenerator } from '../services/EpisodeGenerator';
 import { LLMService } from '../services/LLMService';
+import { createProviderFromEnv } from '../services/llm';
 
 const router = Router();
 router.use(requireAdminSecret);
@@ -27,7 +28,7 @@ router.post('/generate-episode', async (req: Request, res: Response, next: NextF
       worldId = world.id;
     }
 
-    const llm = new LLMService(process.env.ANTHROPIC_API_KEY ?? '');
+    const llm = new LLMService(createProviderFromEnv());
     const generator = new EpisodeGenerator(AppDataSource, llm);
     const episode = await generator.generateNextEpisode(worldId);
 

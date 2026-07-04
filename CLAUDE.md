@@ -71,12 +71,29 @@ Test files live in `__tests__/` directories mirroring source structure.
 ### Backend (`apps/backend/.env`)
 ```
 DATABASE_URL=postgresql://user:pass@localhost:5432/synthetic_island
-ANTHROPIC_API_KEY=sk-ant-...
 REDIS_URL=redis://localhost:6379
 PORT=3001
 NODE_ENV=development
 ADMIN_SECRET=changeme
+
+# LLM provider — anthropic (default) or any OpenAI-compatible API
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+# LLM_MODEL=claude-haiku-4-5-20251001
+
+# Cheaper alternative (Grok/xAI, DeepSeek, Together, Ollama...):
+# LLM_PROVIDER=openai-compatible
+# LLM_BASE_URL=https://api.x.ai/v1
+# LLM_API_KEY=xai-...
+# LLM_MODEL=grok-3-mini
 ```
+
+### LLM Provider Abstraction
+`src/services/llm/` — `ChatProvider` interface with two implementations:
+- `AnthropicProvider` (via `@anthropic-ai/sdk`)
+- `OpenAICompatProvider` (plain fetch against any `/chat/completions` API — Grok, DeepSeek, OpenAI, Ollama)
+
+`LLMService` owns prompts/parsing and is provider-agnostic. Swap providers via env only — no code changes. The safety system prompt is injected regardless of provider.
 
 ### Frontend (`apps/frontend/.env.local`)
 ```

@@ -12,7 +12,6 @@ function optional(key: string, fallback: string): string {
 
 export const env = {
   databaseUrl: required('DATABASE_URL'),
-  anthropicApiKey: required('ANTHROPIC_API_KEY'),
   redisUrl: optional('REDIS_URL', 'redis://localhost:6379'),
   port: parseInt(optional('PORT', '3001'), 10),
   nodeEnv: optional('NODE_ENV', 'development'),
